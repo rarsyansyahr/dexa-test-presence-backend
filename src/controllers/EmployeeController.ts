@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { PrismaClient, UserLevel } from "@prisma/client";
 import { Request, Response } from "express";
 import { AppConfig } from "../config";
@@ -50,7 +51,7 @@ const create = async (req: Request, res: Response) => {
 
 const update = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, position_id, phone_number, photo_path } = req.body;
+  const { name, position_id, phone_number, photo_path, password } = req.body;
 
   await prisma.employee.update({
     data: {
@@ -61,6 +62,7 @@ const update = async (req: Request, res: Response) => {
         update: {
           data: {
             name,
+            ...(password && { password: await bcrypt.hash(password, 8) }),
           },
         },
       },
