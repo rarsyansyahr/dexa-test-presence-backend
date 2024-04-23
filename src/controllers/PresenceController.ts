@@ -11,9 +11,9 @@ const getAll = async (req: Request, res: Response) => {
     ended_at: string;
   };
 
-  const query: Prisma.PresenceWhereInput = {
-    employee: { id: employee_id },
-  };
+  const query: Prisma.PresenceWhereInput = {};
+
+  if (employee_id) query.employee_id = employee_id;
 
   if (started_at && ended_at)
     query.created_at = {
@@ -23,16 +23,20 @@ const getAll = async (req: Request, res: Response) => {
 
   const presences = await prisma.presence.findMany({
     where: query,
+    orderBy: { created_at: "desc" },
+    ...(!employee_id && { include: { employee: { include: { user: true } } } }),
   });
 
-  return res.json({
-    presences: presences.map((item) => ({
+  return res.json(
+    presences.map((item) => ({
       ...item,
-      in_time: dayjs(item.in_time).format("HH:mm:ss"),
-      out_time: dayjs(item.out_time).format("HH:mm:ss"),
-      created_at: dayjs(item.created_at).format(),
-    })),
-  });
+      in_time: dayjs(item.in_time).format("HH:mm"),
+      out_time: dayjs(item.out_time).format("HH:mm"),
+      date: dayjs(item.created_at).format("DD MMMM YYYY"),
+      // @ts-ignore
+      ...(!employee_id && { name: item.employee.user.name }),
+    }))
+  );
 };
 
 const presence = async (req: Request, res: Response) => {
@@ -111,8 +115,8 @@ const checkPresence = async (req: Request, res: Response) => {
     return res.status(404).json({ message: "You're not yet to presence in" });
 
   return res.json({
-    in_time: dayjs(presence.in_time).format("HH:mm:ss"),
-    out_time: dayjs(presence.out_time).format("HH:mm:ss"),
+    in_time: dayjs(presence.in_time).format("HH:mm"),
+    out_time: presence.out_time && dayjs(presence.out_time).format("HH:mm"),
   });
 };
 

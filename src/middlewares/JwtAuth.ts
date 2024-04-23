@@ -9,6 +9,7 @@ export const JwtAuth = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  // @ts-ignore
   jwt.verify(token.split(" ")[1], AppConfig.JwtSecretKey, (err, user) => {
     if (err) {
       return res.status(403).json({ error: "Forbidden" });

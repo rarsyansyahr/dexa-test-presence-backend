@@ -12,6 +12,7 @@ import { JwtAuth } from "./middlewares";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import cors from "cors";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 app.use("/", AppRouter);
 app.use("/auth", AuthRouter);

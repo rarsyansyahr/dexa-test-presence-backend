@@ -10,7 +10,10 @@ const prisma = new PrismaClient();
 const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { employee: true },
+  });
 
   if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -25,7 +28,14 @@ const login = async (req: Request, res: Response) => {
     expiresIn: expiration,
   });
 
-  res.json({ token });
+  res.json({
+    access_token: token,
+    level: user.level,
+    user_id: user.id,
+    name: user.name,
+    email: user.email,
+    employee_id: user?.employee?.id,
+  });
 };
 
 const profile = async (req: Request, res: Response) => {
@@ -36,7 +46,10 @@ const profile = async (req: Request, res: Response) => {
     where: { id: userId },
     include: {
       employee: {
-        include: { presences: { orderBy: { created_at: "desc" }, take: 1 } },
+        include: {
+          presences: { orderBy: { created_at: "desc" }, take: 1 },
+          position: true,
+        },
       },
     },
   });
@@ -48,7 +61,8 @@ const profile = async (req: Request, res: Response) => {
       ...user,
       employee: {
         ...user.employee,
-        photo_path: `${AppConfig.Hostname}/uploads/${user.employee.photo_path}`,
+        photo_path: `${AppConfig.Hostname}/files/${user.employee.photo_path}`,
+        position: user.employee.position.name,
         presences: {},
       },
     };
